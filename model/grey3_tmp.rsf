@@ -1,0 +1,6 @@
+in="vp.dat"
+data_format="native_float"
+esize=4
+n1=101
+n2=201
+n3=201
