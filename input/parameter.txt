@@ -1,0 +1,66 @@
+Time sampling rate[dt-ms]--record time length[nt]
+0.001	500		500
+X-direction distance--y-direction distance--z-direction distance[zmax-m]
+51	  51     24
+X-direction sampling internal--y-direction sampling internal--z-direction sampling internal[dz-m]
+10.0	10.0   	10.0
+Ricker wavelet dominant frequency--source amplitude--source decay coefficient[alp]
+30.0	1    	1
+First source position at x-direction[spx-m] y-direction[spy-m]and z-direction[spz-m]
+50		50     	0
+First geophone position at x-direction[gx-m] y-direction[gy-m]and z-direction[gz-m]
+0  		0  		0
+Nshot(x,y)--shot_interval(x,y)
+1  		1  		10  	10
+Offset[m]-the distance of offset in x and y
+24  	24
+The number of PML absorbing boundary layers[npml] 
+10 
+Model-parameters-vp-epsilon-delta-filename
+model/vp.dat	model/epsilon.dat	model/delta.dat
+Record-fullwave-directwave-mute-filename
+output/Record_fullwave.dat   	output/Record_direct.dat   output/Record_mute.dat
+Record-fullwave-xoz and yoz-slice
+output/recordxz.dat   	output/recordyz.dat
+Snapshot-fullwve-directwave-filename
+output/snapshot_direct  	output/snapshot_fullwave
+Single-shot or multi-shots (single = 0, multi = 1)
+1
+Mute directwave or not(yes = 1, no = 0)
+0
+Save fullwave wavefield snapshot or not(yes = 1, no = 0)
+1
+Save directwave wavefield snapshot or not(yes = 1, no = 0)
+0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

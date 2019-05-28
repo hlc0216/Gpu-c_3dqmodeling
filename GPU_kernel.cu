@@ -11,8 +11,7 @@
 					 
 }
 */
-__global__ void grad(float *u2, float *ux, float *uy, float *uz, float *d_c,
-										 int nx, int ny, int nz, float dx, float dy, float dz)
+__global__ void grad(float *u2, float *ux, float *uy, float *uz, float *d_c,int nx, int ny, int nz, float dx, float dy, float dz)									 
 {
 	int idx = blockDim.y * blockIdx.y + threadIdx.y;
 	int idy = blockDim.x * blockIdx.x + threadIdx.x;
@@ -111,6 +110,7 @@ __global__ void scalar_operator(float uxyzMax, float *ux, float *uy, float *uz, 
 		}
 		S[idz * ny * nx + idx * ny + idy] = 0.5 * (1 + sqrt(1 - (8 * (d_epsilon[idz * ny * nx + idx * ny + idy] - d_delta[idz * ny * nx + idx * ny + idy]) * (nxvector * nxvector + nyvector * nyvector) * nzvector * nzvector) / pow((1 + 2 * d_epsilon[idz * ny * nx + idx * ny + idy] * (nxvector * nxvector + nyvector * nyvector)), 2)));
 		//S[idz*ny*nx+idx*ny+idy]= 1.0;
+	//	printf("S[%d]=%4.3f  ",idz * ny * nx + idx * ny + idy,S[idz * ny * nx + idx * ny + idy]);
 	}
 }
 
@@ -557,7 +557,11 @@ __global__ void wavefield_update(float *d_c, float *d_c2, float *d_dlr, float *d
 		}
 		if (idx >= pml && idx < nx - pml && idy >= pml && idy < ny - pml && idz >= pml && idz < nz - pml)
 		{
+		//	printf("d_epsilon=%4.3f ",d_epsilon[i]);
 			u3[i] = 2 * u2[i] - u1[i] + dt * dt * ((1 + 2 * d_epsilon[i]) * (Uxx + Uyy) + Uzz) * S[i] * d_vp[i] * d_vp[i];
+		// 	if(u3[i]>0.000001||u3[i]<-0.000001){
+		// 		printf("wavefield_update---> inner u3=%4.2f idx=%d idy=%d idz=%d\n ",u3[i],idx,idy,idz);
+		//  }
 		}
 		else if (idx < pml && idy < ny && idz < nz) //left
 		{
@@ -567,6 +571,9 @@ __global__ void wavefield_update(float *d_c, float *d_c2, float *d_dlr, float *d
 			wl21[i1] = dt * pl3[i1] + wl21[i1] * (1 - dt * d_dlr[pml - idx]);
 			wl33[i1] = S[i] * pow(d_vp[i] * dt, 2) * (Uzz + (1 + 2 * d_epsilon[i]) * Uyy) + 2 * wl32[i1] - wl31[i1];
 			u3[i] = wl13[i1] + wl21[i1] + wl33[i1];
+		// 	if(u3[i]>0.000001||u3[i]<-0.000001){
+		// 		printf("wavefield_update---> left u3=%4.2f idx=%d idy=%d idz=%d\n ",u3[i],idx,idy,idz);
+		//  }
 		}
 		else if (idx >= nx - pml && idx < nx && idy < ny && idz < nz) //right
 		{
@@ -576,6 +583,9 @@ __global__ void wavefield_update(float *d_c, float *d_c2, float *d_dlr, float *d
 			wr21[i2] = dt * pr3[i2] + wr21[i2] * (1 - dt * d_dlr[idx - nx + pml]);
 			wr33[i2] = S[i] * pow(d_vp[i] * dt, 2) * (Uzz + (1 + 2 * d_epsilon[i]) * Uyy) + 2 * wr32[i2] - wr31[i2];
 			u3[i] = wr13[i2] + wr21[i2] + wr33[i2];
+			// if(u3[i]>0.000001||u3[i]<-0.000001){
+			// 	printf("wavefield_update---> right u3=%4.2f idx=%d idy=%d idz=%d\n ",u3[i],idx,idy,idz);
+			// }
 		}
 		else if (idy < pml && idx < nx && idz < nz) //forward
 		{
@@ -585,6 +595,9 @@ __global__ void wavefield_update(float *d_c, float *d_c2, float *d_dlr, float *d
 			wf21[i3] = dt * pf3[i3] + wf21[i3] * (1 - dt * d_dfb[pml - idy]);
 			wf33[i3] = S[i] * pow(d_vp[i] * dt, 2) * (Uzz + (1 + 2 * d_epsilon[i]) * Uxx) + 2 * wf32[i3] - wf31[i3];
 			u3[i] = wf13[i3] + wf21[i3] + wf33[i3];
+			// if(u3[i]>0.000001||u3[i]<-0.000001){
+			// 	printf("wavefield_update---> forward u3=%4.2f idx=%d idy=%d idz=%d\n ",u3[i],idx,idy,idz);
+			// }
 		}
 		else if (idy >= ny - pml && idy < ny && idx < nx && idz < nz) //backward
 		{
@@ -594,6 +607,9 @@ __global__ void wavefield_update(float *d_c, float *d_c2, float *d_dlr, float *d
 			wba21[i4] = dt * pba3[i4] + wba21[i4] * (1 - dt * d_dfb[idy - ny + pml]);
 			wba33[i4] = S[i] * pow(d_vp[i] * dt, 2) * (Uzz + (1 + 2 * d_epsilon[i]) * Uxx) + 2 * wba32[i4] - wba31[i4];
 			u3[i] = wba13[i4] + wba21[i4] + wba33[i4];
+		// 	if(u3[i]>0.000001||u3[i]<-0.000001){
+		// 		printf("wavefield_update---> back u3=%4.2f idx=%d idy=%d idz=%d\n ",u3[i],idx,idy,idz);
+		//  }
 		}
 		else if (idz < pml && idx < nx && idy < ny) //top
 		{
@@ -603,6 +619,9 @@ __global__ void wavefield_update(float *d_c, float *d_c2, float *d_dlr, float *d
 			wt21[i5] = dt * pt3[i5] + wt21[i5] * (1 - dt * d_dtb[pml - idz]);
 			wt33[i5] = (1 + 2 * d_epsilon[i]) * S[i] * pow(d_vp[i] * dt, 2) * (Uxx + Uyy) + 2 * wt32[i5] - wt31[i5];
 			u3[i] = wt13[i5] + wt21[i5] + wt33[i5];
+	// 		if(u3[i]>0.000001||u3[i]<-0.000001){
+	// 			printf("wavefield_update---> top u3=%4.2f idx=%d idy=%d idz=%d\n ",u3[i],idx,idy,idz);
+	//  }
 		}
 		else if (idz >= nz - pml && idz < nz && idx < nx && idy < ny) //bottom
 		{
@@ -612,6 +631,9 @@ __global__ void wavefield_update(float *d_c, float *d_c2, float *d_dlr, float *d
 			wb21[i6] = dt * pb3[i6] + wb21[i6] * (1 - dt * d_dtb[idz - nz + pml]);
 			wb33[i6] = (1 + 2 * d_epsilon[i]) * S[i] * pow(d_vp[i] * dt, 2) * (Uxx + Uyy) + 2 * wb32[i6] - wb31[i6];
 			u3[i] = wb13[i6] + wb21[i6] + wb33[i6];
+			// if(u3[i]>0.000001||u3[i]<-0.000001){
+			// 	printf("wavefield_update---> bot u3=%4.2f idx=%d idy=%d idz=%d\n ",u3[i],idx,idy,idz);
+			// }
 		}
 	}
 }
@@ -703,6 +725,8 @@ __global__ void addsource(float *d_source, float wavelet, float *u3, int nx, int
 	if (idx < nx && idy < ny && idz < nz)
 	{
 		u3[idz * ny * nx + idx * ny + idy] += d_source[idz * ny * nx + idx * ny + idy] * wavelet;
+		//printf("addsource--> u3=%4.2f ",u3[idz * ny * nx + idx * ny + idy]);
+
 	}
 }
 

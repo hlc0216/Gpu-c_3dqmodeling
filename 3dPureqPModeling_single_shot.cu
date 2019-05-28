@@ -25,8 +25,7 @@
 
 void modeling3d(int nx, int ny, int nz, int nt, int ntsnap, float dx, float dy, float dz, float dt, int pml, int snapflag, int sx, int sy, int sz, 
                 float *vp, float *epsilon, float *delta, float *source, float *wavelet, float *record, float *dlr,float *ddlr, float *dtb, float *ddtb, 
-				float *dfb, float *ddfb, float *c, float *c2, const char *snap_file)
-								
+				float *dfb, float *ddfb, float *c, float *c2, const char *snap_file)							
 {
 		//time-assuming
 		clock_t starttime, endtime;
@@ -63,6 +62,40 @@ void modeling3d(int nx, int ny, int nz, int nt, int ntsnap, float dx, float dy, 
 				*wb11, *wb12, *wb13, *wb21, *wb31, *wb32, *wb33, *pb1,*pb2,*pb3,
 				*wf11, *wf12, *wf13, *wf21, *wf31, *wf32, *wf33, *pf1,*pf2,*pf3,
 				*wba11, *wba12, *wba13, *wba21, *wba31, *wba32, *wba33, *pba1,*pba2,*pba3;
+
+		/*打印cpu参数*/
+		for(i=0;i<nt;i++){
+			printf("wavelet=%4.3f ",wavelet[i]);
+		}
+		printf("\n");
+		for(i=0;i<pml;i++){
+			printf("dlr=%4.3f ",dlr[i]);
+		}
+		printf("\n");
+		for(i=0;i<pml;i++){
+			printf("ddlr=%4.3f ",ddlr[i]);
+		}
+		printf("\n");
+		for(i=0;i<pml;i++){
+			printf("dtb=%4.3f ",dtb[i]);
+		}
+		printf("\n");
+		for(i=0;i<pml;i++){
+			printf("ddtb=%4.3f ",ddtb[i]);
+		}
+		printf("\n");
+		for(i=0;i<pml;i++){
+			printf("dfb=%4.3f ",dfb[i]);
+		}
+		printf("\n");
+		for(i=0;i<pml;i++){
+			printf("ddfb=%4.3f ",ddfb[i]);
+		}
+		printf("\n");
+		for(i=(M/2)*(M/2+1)+1;i<(M/2)*(M/2+1)+6;i++){
+			printf("c2=%4.3f ",c2[i]);
+		}
+		printf("\n");
 		
 		cudaMalloc(&d_vp, nx*ny*nz*sizeof(float));
 		cudaMalloc(&d_epsilon, nx*ny*nz*sizeof(float));
@@ -257,10 +290,11 @@ void modeling3d(int nx, int ny, int nz, int nt, int ntsnap, float dx, float dy, 
 			uzMax = absMaxval(h_uz, nx, ny, nz);
 			uxyzMax = max(uxMax, uyMax);
 			uxyzMax = max(uxyzMax, uzMax);
-			
+			//打印uxyzMax
+			printf("uxyzMax=%4.3f\n",uxyzMax);
 			//calculating S operators
   	  		scalar_operator<<<grid,block>>>(uxyzMax, ux, uy, uz, d_epsilon, d_delta, S, nx, ny, nz);
-  	 	
+  	 	    //打印S GPU端(见GPU_kernel.cu)
   	  		//calculating wavefield using FD method
   	  		wavefield_update<<<grid,block>>>(d_c, d_c2, d_dlr, d_ddlr, d_dtb, d_ddtb, d_dfb, d_ddfb, d_epsilon,d_delta,
   	                                    	d_vp, dx, dy, dz, dt, nx, ny, nz, pml, sz, ux, uy, uz, u1, u3, u2, S,
@@ -281,16 +315,28 @@ void modeling3d(int nx, int ny, int nz, int nt, int ntsnap, float dx, float dy, 
 									wba11, wba12, wba13, wba31, wba32, wba33, pba1, pba2, pba3);
 		 	
      		// seismic fullwavefield and record
-   //  	 	wavefield_output<<<grid,block>>>(u2, d_u, &d_record[k*(nx-2*pml)*(ny-2*pml)], nx, ny, nz, sz, pml);	
+            //wavefield_output<<<grid,block>>>(u2, d_u, &d_record[k*(nx-2*pml)*(ny-2*pml)], nx, ny, nz, sz, pml);	
 	 		
-	 		cudaMemcpy(h_u2, u2, nx*ny*nz*sizeof(float), cudaMemcpyDeviceToHost);
+			 cudaMemcpy(h_u2, u2, nx*ny*nz*sizeof(float), cudaMemcpyDeviceToHost);
+			//打印 h_u2
+			// for(int i=0;i<nz;i++){
+			// 	for(int j=0;j<nx;j++){
+			// 		for(int k=0;k<ny;k++){
+			// 			if(h_u2[i*nx*ny+j*ny+k]>0.0001 || h_u2[i*nx*ny+j*ny+k]<-0.0001)
+			// 				printf("h_u2[xxx]=%4.3f ",h_u2[i*nx*ny+j*ny+k]);
+			// 		}
+					
+			// 	}
+				
+			// }
+
 	 		for(i=pml;i<nx-pml;i++)
 	 			for(j=pml;j<ny-pml;j++)
 	 			{
 	 				record[k*(nx-2*pml)*(ny-2*pml)+(i-pml)*(ny-2*pml)+j-pml] = h_u2[sz*nx*ny+i*ny+j];
 	 			}
 	 	
-	/*		
+		
       		if(snapflag ==1 && k%ntsnap==0)
      		{
 				sprintf(snapname,"%s%d.dat", snap_file, k);
@@ -328,6 +374,7 @@ void modeling3d(int nx, int ny, int nz, int nt, int ntsnap, float dx, float dy, 
 				writefile_2d(snapxzname, snapxz, nz-2*pml, nx-2*pml);
 				writefile_2d(snapyzname, snapyz, nz-2*pml, ny-2*pml);
 				writefile_2d(snapxyname, snapxy, nx-2*pml, ny-2*pml);
+					}
 
 			//	printf("%f\n",absMaxval(snap, nx-2*pml, ny-2*pml, nz-2*pml));
 				

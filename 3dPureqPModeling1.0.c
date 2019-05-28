@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 				recdir_file[100], recmut_file[100], snap_file1[100], snap_file2[100],buff[100];
 		
 		FILE *fp = NULL;
-		fp = fopen("parameter.txt","r");
+		fp = fopen("./input/parameter.txt","r");
 	  	if(fp == NULL)
 	  	{
 			 printf("parameter.txt is not exist !\n");
@@ -248,7 +248,15 @@ int main(int argc, char *argv[])
 				 extend_model(vp1, vp, nx, ny, nz, pml);
 				 extend_model(epsilon1, epsilon, nx, ny, nz, pml);
 				 extend_model(delta1, delta, nx, ny, nz, pml);
-				
+
+				//  for(i=0;i<nz;i++){
+				// 	  for(j=0;j<nx;j++){
+				// 		  for(k=0;k<nz;k++){
+				// 			  printf("eps=%4.2f ",epsilon[i*nx*ny+j*ny+k]);
+
+				// 		  }
+				// 	  }
+				//   }
 				 //PML ATTENUATION COEFFICIENT 
 				 vpmax = (1 + 2*absMaxval(epsilon, nx, ny, nz))*absMaxval(vp, nx, ny, nz);
 				 pmlcoff(pml, vpmax, dx, dy, dz, dlr, ddlr, dtb, ddtb, dfb, ddfb);
@@ -266,10 +274,10 @@ int main(int argc, char *argv[])
 						for(k=0;k<nt;k++)
 							record_mute[k*hx*hy+i*hy+j] = record_fullwave[k*hx*hy+i*hy+j]-record_direct[k*hx*hy+i*hy+j];
 
-				for(k=0;k<nt;k++){
-					test[k]=record_mute[k*hx*hy+sx1*hy+sy1];
-					printf("test=%6.4f  ",test[k]);
-				}					
+				// for(k=0;k<nt;k++){
+				// 	test[k]=record_mute[k*hx*hy+sx1*hy+sy1];
+				// 	printf("test=%6.4f  ",test[k]);
+				// }					
 				writefile2_3d(recfull_file, record_fullwave, nt, hx, hy);
 				writefile2_3d(recmut_file, record_mute, nt, hx, hy);
 				
